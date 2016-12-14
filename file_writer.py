@@ -46,11 +46,7 @@ class FileWriter:
             self._new_file()
 
         self.written += 1
-        decimals = int(((sample.time - int(sample.time)) * 10000)) / 10000.0
-        time_str = str(int(sample.time) + decimals)
-        line = sample.sensor_type + ',' + str(sample.x) + ',' + str(sample.y) + ',' + str(
-            sample.z) + ',' + time_str + '\n'
-        self.__f.write(line)
+        self.__f.write(str(sample) + '\n')
 
     def start_write_loop(self):
         """
