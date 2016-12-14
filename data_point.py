@@ -1,3 +1,14 @@
+def trunc(s):
+    if len(s) > 5:
+        return s[:6]
+    else:
+        return s
+
+
+def format(val):
+    return trunc(str(val))
+
+
 class DataPoint:
     """
     Data point from a single sensor
@@ -13,8 +24,8 @@ class DataPoint:
     def __str__(self):
         decimals = int(((self.time - int(self.time)) * 10000)) / 10000.0
         time_str = str(int(self.time) + decimals)
-        return self.sensor_type + ',' + str(self.x) + ',' + str(self.y) + ',' + str(
-            self.z) + ',' + time_str
+        return self.sensor_type + ',' + format(self.x) + ',' + format(self.y) + ',' + format(
+            self.z) + ',' + trunc(time_str)
 
     @staticmethod
     def from_str(serialized):

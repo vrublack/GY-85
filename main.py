@@ -1,11 +1,22 @@
 from multiprocessing import Process
 
+import sys
+
 import file_writer
+import stdout_writer
+from stdout_writer import StdoutWriter
 from sensor_reader import SensorReader
 from file_writer import FileWriter
 
 sensor_reader = SensorReader()
-writer = FileWriter('/home/pi/sensor_recordings/')
+using_stdout = len(sys.argv) >= 2 and sys.argv[1] == '--stdout'
+if using_stdout:
+    if len(sys.argv) >= 4 and sys.argv[2] == '-nth':
+        writer = StdoutWriter(int(sys.argv[3]))
+    else:
+        writer = StdoutWriter()
+else:
+    writer = FileWriter('/home/pi/sensor_recordings/')
 sensor_reader.set_sensor_listener(writer)
 
 while True:
@@ -16,7 +27,10 @@ while True:
     # the other thread to slow down due to Global Interpreter Lock.
 
     # reset this because sensor_reader.start_reading() might execute before file_writer.start_write_loop()
-    file_writer.stop.value = 0
+    if using_stdout:
+        stdout_writer.stop.value = 0
+    else:
+        file_writer.stop.value = 0
     process = Process(target=writer.start_write_loop)
     process.start()
 
