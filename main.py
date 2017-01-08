@@ -1,18 +1,24 @@
 from multiprocessing import Process
 
 import sys
-
+import argparse
 import file_writer
 import stdout_writer
 from stdout_writer import StdoutWriter
 from sensor_reader import SensorReader
 from file_writer import FileWriter
 
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--stdout", help="write to stdout instead of file", action="store_true")
+parser.add_argument("-nth", type=int, help="only print ever nth sample if --stdout is specified")
+args = parser.parse_args()
+
+
 sensor_reader = SensorReader()
-using_stdout = len(sys.argv) >= 2 and sys.argv[1] == '--stdout'
-if using_stdout:
-    if len(sys.argv) >= 4 and sys.argv[2] == '-nth':
-        writer = StdoutWriter(int(sys.argv[3]))
+if args.stdout:
+    if args.nth is not None:
+        writer = StdoutWriter(args.nth)
     else:
         writer = StdoutWriter()
 else:
@@ -27,7 +33,7 @@ while True:
     # the other thread to slow down due to Global Interpreter Lock.
 
     # reset this because sensor_reader.start_reading() might execute before file_writer.start_write_loop()
-    if using_stdout:
+    if args.stdout:
         stdout_writer.stop.value = 0
     else:
         file_writer.stop.value = 0
