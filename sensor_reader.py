@@ -2,6 +2,7 @@ import random
 import time
 from adxl345.i2c import ADXL345
 from data_point import DataPoint
+from emg.emg import EMG
 from hmc5883l.HMC5883L import HMC5883L
 from itg3200.ITG3200 import ITG3200
 
@@ -19,6 +20,7 @@ class SensorReader:
         self.accelerometer.set_range(16, True)
         self.gyroscope = ITG3200()
         self.compass = HMC5883L()
+        self.emg = EMG()
 
     def set_sensor_listener(self, listener):
         self.listener = listener
@@ -39,8 +41,10 @@ class SensorReader:
                 reading = self.__read_gyroscope()
             elif sensor == 'comp':
                 reading = self.__read_compass()
-            else:
+            elif sensor == 'acc':
                 reading = self.__read_accelerometer()
+            else:
+                reading = self.__read_emg()
 
             curr_sec = self.current_sec()
             if self.last_sec != curr_sec:
@@ -71,6 +75,13 @@ class SensorReader:
         acc_reading.time = self.current_millis_frac() - self.started_ms
         return acc_reading
 
+    def __read_emg(self):
+        reading = DataPoint()
+        reading.sensor_type = 'emg'
+        reading.x = self.emg.read_emg()
+        reading.time = self.current_millis_frac() - self.started_ms
+        return reading
+
     def __read_gyroscope(self):
         gyr_reading = DataPoint()
         gyr_reading.sensor_type = 'gyr'
@@ -96,16 +107,11 @@ class SensorReader:
 
         :return: Which sensor to read from in the current iteration (based on read_samples)
         """
-        return 'acc'
-
-        # TODO uncomment to also read from other sensors, if needed
-        # remainder = self.read_samples % 16
-        # if remainder == 0 or remainder == 11:
-        #     return 'gyr'
-        # elif remainder == 6:
-        #     return 'comp'
-        # else:
-        #     return 'acc'
+        remainder = self.read_samples % 2
+        if remainder == 0:
+            return 'acc'
+        else:
+            return 'emg'
 
     @staticmethod
     def current_millis_frac():
