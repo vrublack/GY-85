@@ -25,19 +25,17 @@ else:
     writer = FileWriter('/home/pi/sensor_recordings/')
 sensor_reader.set_sensor_listener(writer)
 
-while True:
+# Consumer/producer architecture: the SensorReader is the producer, reading data from sensors,
+# and the FileWriter is the consumer.
+# We use multiprocessing.Process instead of threading.Thread because the latter would also cause
+# the other thread to slow down due to Global Interpreter Lock.
 
-    # Consumer/producer architecture: the SensorReader is the producer, reading data from sensors,
-    # and the FileWriter is the consumer.
-    # We use multiprocessing.Process instead of threading.Thread because the latter would also cause
-    # the other thread to slow down due to Global Interpreter Lock.
+# reset this because sensor_reader.start_reading() might execute before file_writer.start_write_loop()
+if args.stdout:
+    stdout_writer.stop.value = 0
+else:
+    file_writer.stop.value = 0
+process = Process(target=writer.start_write_loop)
+process.start()
 
-    # reset this because sensor_reader.start_reading() might execute before file_writer.start_write_loop()
-    if args.stdout:
-        stdout_writer.stop.value = 0
-    else:
-        file_writer.stop.value = 0
-    process = Process(target=writer.start_write_loop)
-    process.start()
-
-    sensor_reader.start_reading()
+sensor_reader.start_reading()
